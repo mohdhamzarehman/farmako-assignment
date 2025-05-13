@@ -1,0 +1,256 @@
+basePath: /api/v1
+definitions:
+  domain.ApplicableCoupon:
+    properties:
+      coupon_code:
+        type: string
+      discount_value:
+        type: number
+    type: object
+  domain.ApplicableCouponsRequest:
+    properties:
+      cart_items:
+        items:
+          $ref: '#/definitions/domain.CartItem'
+        type: array
+      order_total:
+        type: number
+      timestamp:
+        type: string
+    type: object
+  domain.ApplicableCouponsResponse:
+    properties:
+      applicable_coupons:
+        items:
+          $ref: '#/definitions/domain.ApplicableCoupon'
+        type: array
+    type: object
+  domain.CartItem:
+    properties:
+      category:
+        type: string
+      id:
+        type: string
+      price:
+        type: number
+    type: object
+  domain.Coupon:
+    description: Coupon information
+    properties:
+      applicable_categories:
+        items:
+          type: string
+        type: array
+      applicable_medicine_ids:
+        items:
+          type: string
+        type: array
+      code:
+        type: string
+      created_at:
+        type: string
+      discount_type:
+        $ref: '#/definitions/domain.DiscountType'
+      discount_value:
+        type: number
+      expiry_date:
+        type: string
+      id:
+        type: string
+      max_usage_per_user:
+        type: integer
+      min_order_value:
+        type: number
+      terms_and_conditions:
+        type: string
+      updated_at:
+        type: string
+      usage_type:
+        $ref: '#/definitions/domain.UsageType'
+      valid_time_window:
+        $ref: '#/definitions/domain.TimeWindow'
+    type: object
+  domain.CouponRequest:
+    description: Request to get applicable coupons
+    properties:
+      categories:
+        items:
+          type: string
+        type: array
+      medicine_ids:
+        items:
+          type: string
+        type: array
+      order_value:
+        type: number
+      user_id:
+        type: string
+    type: object
+  domain.CouponValidationRequest:
+    description: Request to validate a coupon
+    properties:
+      categories:
+        items:
+          type: string
+        type: array
+      code:
+        type: string
+      medicine_ids:
+        items:
+          type: string
+        type: array
+      order_value:
+        type: number
+      user_id:
+        type: string
+    type: object
+  domain.CouponValidationResponse:
+    description: Response for coupon validation
+    properties:
+      discount:
+        type: number
+      final_amount:
+        type: number
+      is_valid:
+        type: boolean
+      message:
+        type: string
+    type: object
+  domain.DiscountType:
+    enum:
+    - percentage
+    - fixed
+    type: string
+    x-enum-varnames:
+    - Percentage
+    - Fixed
+  domain.TimeWindow:
+    description: Time window for coupon validity
+    properties:
+      end_time:
+        type: string
+      start_time:
+        type: string
+    type: object
+  domain.UsageType:
+    enum:
+    - one_time
+    - multi_use
+    - time_based
+    type: string
+    x-enum-varnames:
+    - OneTime
+    - MultiUse
+    - TimeBased
+  handler.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  handler.HealthResponse:
+    properties:
+      services:
+        additionalProperties:
+          type: string
+        type: object
+      status:
+        type: string
+      timestamp:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: A coupon management system for medicine ordering platform
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Coupon System API
+  version: "1.0"
+paths:
+  /coupons/applicable:
+    get:
+      consumes:
+      - application/json
+      description: Get all applicable coupons for a cart
+      parameters:
+      - description: Cart details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.ApplicableCouponsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.ApplicableCouponsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Get applicable coupons
+      tags:
+      - coupons
+  /coupons/validate:
+    post:
+      consumes:
+      - application/json
+      description: Validate a coupon code against cart items
+      parameters:
+      - description: Coupon validation details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CouponValidationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.CouponValidationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Validate coupon
+      tags:
+      - coupons
+  /health:
+    get:
+      description: Check the health of the system and its dependencies
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.HealthResponse'
+      summary: Health check endpoint
+      tags:
+      - health
+schemes:
+- http
+- https
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
