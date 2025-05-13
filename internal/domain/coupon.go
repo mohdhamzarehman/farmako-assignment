@@ -24,7 +24,6 @@ const (
 	Fixed      DiscountType = "fixed"
 )
 
-// Coupon represents a coupon in the system
 // @Description Coupon information
 type Coupon struct {
 	ID                    uuid.UUID    `json:"id" gorm:"type:uuid;primary_key"`
@@ -43,14 +42,12 @@ type Coupon struct {
 	UpdatedAt             time.Time    `json:"updated_at"`
 }
 
-// TimeWindow represents the valid time window for a coupon
 // @Description Time window for coupon validity
 type TimeWindow struct {
 	StartTime time.Time `json:"start_time"`
 	EndTime   time.Time `json:"end_time"`
 }
 
-// CouponRequest represents a request to get applicable coupons
 // @Description Request to get applicable coupons
 type CouponRequest struct {
 	MedicineIDs []string `json:"medicine_ids"`
@@ -59,7 +56,6 @@ type CouponRequest struct {
 	UserID      string   `json:"user_id"`
 }
 
-// CouponValidationRequest represents a request to validate a coupon
 // @Description Request to validate a coupon
 type CouponValidationRequest struct {
 	Code        string   `json:"code"`
@@ -69,7 +65,6 @@ type CouponValidationRequest struct {
 	UserID      string   `json:"user_id"`
 }
 
-// CouponValidationResponse represents the response for coupon validation
 // @Description Response for coupon validation
 type CouponValidationResponse struct {
 	IsValid     bool    `json:"is_valid"`
@@ -78,7 +73,6 @@ type CouponValidationResponse struct {
 	FinalAmount float64 `json:"final_amount"`
 }
 
-// CouponNotFoundError represents an error when a coupon is not found
 type CouponNotFoundError struct {
 	Code string
 }
@@ -87,12 +81,10 @@ func (e *CouponNotFoundError) Error() string {
 	return fmt.Sprintf("coupon not found: %s", e.Code)
 }
 
-// Value implements the driver.Valuer interface for TimeWindow
 func (tw TimeWindow) Value() (driver.Value, error) {
 	return json.Marshal(tw)
 }
 
-// Scan implements the sql.Scanner interface for TimeWindow
 func (tw *TimeWindow) Scan(value interface{}) error {
 	bytes, ok := value.([]byte)
 	if !ok {

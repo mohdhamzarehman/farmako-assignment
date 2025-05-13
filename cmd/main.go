@@ -10,7 +10,6 @@ import (
 	"syscall"
 	"time"
 
-	// _ "github.com/farmako/coupon-system/docs" // This will be generated
 	"github.com/farmako/coupon-system/internal/domain"
 	"github.com/farmako/coupon-system/internal/handler"
 	"github.com/farmako/coupon-system/internal/middleware"
@@ -50,59 +49,46 @@ func main() {
 		log.Printf("Warning: .env file not found")
 	}
 
-	// Initialize database connection
 	db, err := initDB()
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 
-	// Initialize Redis client
 	redisClient := initRedis()
 
-	// Initialize dependencies
 	couponRepo := repository.NewCouponRepository(db)
 	couponService := service.NewCouponService(couponRepo, redisClient)
 	couponHandler := handler.NewCouponHandler(couponService)
 	healthHandler := handler.NewHealthHandler(db, redisClient)
 
-	// Initialize rate limiter
 	rateLimiter := middleware.NewRateLimiter(redisClient, 100, time.Minute)
 
-	// Initialize router
 	router := gin.Default()
 
-	// Apply rate limiting to all routes
 	router.Use(rateLimiter.RateLimit())
 
-	// Health check endpoint
 	router.GET("/health", healthHandler.HealthCheck)
 
-	// API routes
 	api := router.Group("/api/v1")
 	{
 		api.GET("/coupons/applicable", couponHandler.GetApplicableCoupons)
 		api.POST("/coupons/validate", couponHandler.ValidateCoupon)
 	}
 
-	// Swagger documentation
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// Start server
 	srv := &http.Server{
 		Addr:    ":8080",
 		Handler: router,
 	}
 
-	// Server run context
 	serverCtx, serverStopCtx := context.WithCancel(context.Background())
 
-	// Listen for syscall signals for process to interrupt/quit
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	go func() {
 		<-sig
 
-		// Shutdown signal with grace period of 30 seconds
 		shutdownCtx, _ := context.WithTimeout(serverCtx, 30*time.Second)
 
 		go func() {
@@ -112,7 +98,6 @@ func main() {
 			}
 		}()
 
-		// Trigger graceful shutdown
 		err := srv.Shutdown(shutdownCtx)
 		if err != nil {
 			log.Fatal(err)
@@ -120,14 +105,12 @@ func main() {
 		serverStopCtx()
 	}()
 
-	// Run the server
 	log.Printf("Server is running on port 8080")
 	err = srv.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)
 	}
 
-	// Wait for server context to be stopped
 	<-serverCtx.Done()
 }
 
@@ -145,7 +128,6 @@ func initDB() (*gorm.DB, error) {
 		return nil, err
 	}
 
-	// Auto-migrate the schema
 	if err := db.AutoMigrate(&domain.Coupon{}); err != nil {
 		return nil, err
 	}
@@ -160,7 +142,6 @@ func initRedis() *redis.Client {
 		DB:       0,
 	})
 
-	// Test Redis connection
 	ctx := context.Background()
 	if err := redisClient.Ping(ctx).Err(); err != nil {
 		log.Printf("Warning: Failed to connect to Redis: %v", err)

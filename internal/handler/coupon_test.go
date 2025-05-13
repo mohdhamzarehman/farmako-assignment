@@ -30,16 +30,13 @@ func (m *MockCouponService) ValidateCoupon(ctx context.Context, req domain.Coupo
 }
 
 func TestGetApplicableCoupons(t *testing.T) {
-	// Setup
 	gin.SetMode(gin.TestMode)
 	mockService := new(MockCouponService)
 	handler := NewCouponHandler(mockService)
 	router := gin.New()
 	router.GET("/coupons/applicable", handler.GetApplicableCoupons)
 
-	// Test cases
 	t.Run("success", func(t *testing.T) {
-		// Mock data
 		request := domain.CouponRequest{
 			MedicineIDs: []string{"med1", "med2"},
 			Categories:  []string{"cat1"},
@@ -66,7 +63,6 @@ func TestGetApplicableCoupons(t *testing.T) {
 		req, _ := http.NewRequest("GET", "/coupons/applicable", bytes.NewBuffer(body))
 		router.ServeHTTP(w, req)
 
-		// Assertions
 		assert.Equal(t, http.StatusOK, w.Code)
 		var response []domain.Coupon
 		err := json.Unmarshal(w.Body.Bytes(), &response)
@@ -75,7 +71,6 @@ func TestGetApplicableCoupons(t *testing.T) {
 	})
 
 	t.Run("invalid request", func(t *testing.T) {
-		// Make request with invalid JSON
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", "/coupons/applicable", bytes.NewBufferString("invalid json"))
 		router.ServeHTTP(w, req)
@@ -86,7 +81,6 @@ func TestGetApplicableCoupons(t *testing.T) {
 }
 
 func TestValidateCoupon(t *testing.T) {
-	// Setup
 	gin.SetMode(gin.TestMode)
 	mockService := new(MockCouponService)
 	handler := NewCouponHandler(mockService)
@@ -113,13 +107,11 @@ func TestValidateCoupon(t *testing.T) {
 
 		mockService.On("ValidateCoupon", mock.Anything, request).Return(expectedResponse, nil)
 
-		// Make request
 		body, _ := json.Marshal(request)
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("POST", "/coupons/validate", bytes.NewBuffer(body))
 		router.ServeHTTP(w, req)
 
-		// Assertions
 		assert.Equal(t, http.StatusOK, w.Code)
 		var response domain.CouponValidationResponse
 		err := json.Unmarshal(w.Body.Bytes(), &response)
@@ -128,7 +120,6 @@ func TestValidateCoupon(t *testing.T) {
 	})
 
 	t.Run("coupon not found", func(t *testing.T) {
-		// Mock data
 		request := domain.CouponValidationRequest{
 			Code:        "INVALID",
 			MedicineIDs: []string{"med1"},
@@ -139,13 +130,11 @@ func TestValidateCoupon(t *testing.T) {
 
 		mockService.On("ValidateCoupon", mock.Anything, request).Return(nil, &domain.CouponNotFoundError{Code: "INVALID"})
 
-		// Make request
 		body, _ := json.Marshal(request)
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("POST", "/coupons/validate", bytes.NewBuffer(body))
 		router.ServeHTTP(w, req)
 
-		// Assertions
 		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
 }

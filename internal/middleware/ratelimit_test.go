@@ -13,20 +13,16 @@ import (
 )
 
 func TestRateLimiter(t *testing.T) {
-	// Setup Redis client
 	redisClient := redis.NewClient(&redis.Options{
 		Addr: "localhost:6379",
 	})
 
-	// Clean up Redis before and after tests
 	ctx := context.Background()
 	redisClient.FlushAll(ctx)
 	defer redisClient.FlushAll(ctx)
 
-	// Create rate limiter with small limits for testing
 	limiter := NewRateLimiter(redisClient, 2, time.Second)
 
-	// Setup Gin router
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 	router.Use(limiter.RateLimit())
@@ -35,7 +31,6 @@ func TestRateLimiter(t *testing.T) {
 	})
 
 	t.Run("should allow requests within limit", func(t *testing.T) {
-		// First request
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", "/test", nil)
 		router.ServeHTTP(w, req)
@@ -43,7 +38,6 @@ func TestRateLimiter(t *testing.T) {
 		assert.Equal(t, "2", w.Header().Get("X-RateLimit-Limit"))
 		assert.Equal(t, "1", w.Header().Get("X-RateLimit-Remaining"))
 
-		// Second request
 		w = httptest.NewRecorder()
 		req, _ = http.NewRequest("GET", "/test", nil)
 		router.ServeHTTP(w, req)
@@ -61,7 +55,6 @@ func TestRateLimiter(t *testing.T) {
 	})
 
 	t.Run("should reset after window expires", func(t *testing.T) {
-		// Wait for the rate limit window to expire
 		time.Sleep(time.Second)
 
 		w := httptest.NewRecorder()

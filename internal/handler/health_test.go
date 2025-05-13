@@ -15,19 +15,15 @@ import (
 )
 
 func TestHealthHandler(t *testing.T) {
-	// Setup test database
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	assert.NoError(t, err)
 
-	// Setup Redis client
 	redisClient := redis.NewClient(&redis.Options{
 		Addr: "localhost:6379",
 	})
 
-	// Create health handler
 	handler := NewHealthHandler(db, redisClient)
 
-	// Setup Gin router
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 	router.GET("/health", handler.HealthCheck)
@@ -50,7 +46,6 @@ func TestHealthHandler(t *testing.T) {
 	})
 
 	t.Run("should return unhealthy when database is down", func(t *testing.T) {
-		// Create a handler with a closed database
 		closedDB, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 		sqlDB, _ := closedDB.DB()
 		sqlDB.Close()
@@ -74,7 +69,6 @@ func TestHealthHandler(t *testing.T) {
 	})
 
 	t.Run("should return unhealthy when redis is down", func(t *testing.T) {
-		// Create a handler with a closed Redis client
 		closedRedis := redis.NewClient(&redis.Options{
 			Addr: "localhost:9999", // Non-existent port
 		})

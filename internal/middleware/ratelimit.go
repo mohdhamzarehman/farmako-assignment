@@ -28,7 +28,6 @@ func (rl *RateLimiter) RateLimit() gin.HandlerFunc {
 		key := "rate_limit:" + c.ClientIP()
 		ctx := c.Request.Context()
 
-		// Get current count
 		count, err := rl.redisClient.Get(ctx, key).Int()
 		if err != nil && err != redis.Nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "rate limit check failed"})
@@ -45,7 +44,6 @@ func (rl *RateLimiter) RateLimit() gin.HandlerFunc {
 			return
 		}
 
-		// Increment counter
 		pipe := rl.redisClient.Pipeline()
 		pipe.Incr(ctx, key)
 		pipe.Expire(ctx, key, rl.window)
@@ -56,7 +54,6 @@ func (rl *RateLimiter) RateLimit() gin.HandlerFunc {
 			return
 		}
 
-		// Set rate limit headers
 		c.Header("X-RateLimit-Limit", strconv.Itoa(rl.limit))
 		c.Header("X-RateLimit-Remaining", strconv.Itoa(rl.limit-count-1))
 		c.Header("X-RateLimit-Reset", strconv.FormatInt(time.Now().Add(rl.window).Unix(), 10))
